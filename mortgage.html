@@ -1,0 +1,186 @@
+<html>
+  <head>
+    <title>Mortgage computations</title>
+    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.21.custom.min.js"></script>
+    <script type="text/javascript" src="raphael-min.js"></script>
+    <script type="text/javascript" src="actuaries.js"></script>
+    <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
+  <style>
+  label {
+    margin-right: 5px;
+  }
+  .input {
+    border: 1px solid #ccc;
+    background: #ffc;
+  }
+  .boxed {
+    background-color: #fafafa;
+    border: 1px solid #ccc;
+    border-width: 1px;
+    margin: 10px;
+    padding: 20px;
+    width: 600px;
+  }
+  .bold {
+    color: #f6931f;
+    font-weight: bold;
+  }
+  .boxTitle {
+    display: block;
+    font-weight: bold;
+  }
+  .boxContent {
+    margin-top: 10px;
+  }
+  .toggle:after {
+    content: " (+)";
+    font-size: smaller;
+    font-style: normal;
+  }
+  #canvas {
+    margin-top: 20px;
+    height: 100px;
+  }
+  </style>
+  </head>
+<body>
+
+<div id="inputs" class="boxed">
+  <em class="boxTitle">Inputs</em>
+  <div class="boxContent">
+    <label for="amount">Amount (<span class="currency">&pound;</span>)</label>
+    <input id="amount" type="text" class="input" value="80000" size="4" maxLength="6" />
+
+    <label for="rate">Rate (%)</label>
+    <input id="rate" type="text" class="input" value="3" size="2" maxLength="4"/>
+
+    <label for="years">Years</label>
+    <input id="years" type="text" class="input" value="20" size="1" maxLength="2" />
+
+    <br/><br/>
+    <label for="overpayment">Overpayment (<span class="currency">&pound;</span>)</label>
+    <input id="overpayment" type="text" class="input" value="0" size="2" maxLength="4" />
+  </div>
+</div>
+
+<div id="paymentoutputs" class="boxed">
+  <em class="boxTitle">Original payment plan</em>
+  <div class="boxContent">
+    <div id="payment"></div>
+  </div>
+</div>
+
+<div id="repaymentoutputs" class="boxed">
+  <em class="boxTitle">Repayments</em>
+  <div class="boxContent">
+    Repayment will happen in <span id="actualperiods">0</span> periods.<br>
+    After <span id="currentperiod" class="bold">24</span> periods:
+    <div id="repayments"></div>
+    <div id="slider" style="margin-top: 5px; width: 50%;"></div>
+    <div id="canvas"></div>
+  </div>
+</div>
+
+<div id="options" class="boxed">
+  <em class="boxTitle toggle">Options</em>
+  <div id="optionsbox" class="boxcontent">
+    <input type="radio" name="currency" value="&pound;" checked />British Pound (&pound;)<br/>
+    <input type="radio" name="currency" value="$" />US Dollar ($)<br/>
+    <input type="radio" name="currency" value="&euro;" />Euro (&euro;)<br/>
+  </div>
+</div>
+
+
+<script type="text/javascript">
+var minRate = 0.5;
+var maxRate = 10;
+
+var minYears = 5;
+var maxYears = 50;
+
+var amount;
+var rate;
+var years;
+var overpayment;
+var actualperiods;
+
+var currentperiod = $("#currentperiod").text();
+var currency = setCurrency($("input:radio[name=currency]:checked").val());
+
+var canvas = initRaphael("#canvas");
+
+$("#inputs").change(function() {
+
+  // input data
+  amount = clamp(parseInt($("#amount").val()), 10000, 1000000);
+  rate = clamp(parseFloat($("#rate").val()), minRate, maxRate);
+  years = clamp(parseInt($("#years").val()), minYears, maxYears);
+  overpayment = clamp(parseInt($("#overpayment").val()), 0, 1000);
+
+  // computations
+  var mortgage = computePayment(amount, rate, years, overpayment);
+
+  actualperiods = mortgage.actualperiods;
+  currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
+
+  var repayment = computeRepayment(mortgage, currentperiod);
+
+  updateFields(amount, rate, years,
+               overpayment, actualperiods, currentperiod);
+
+  // report results
+  $("#payment").html(mortgage.periods +  " payments of " + currency(mortgage.payment));
+
+  $("#repayments").html("Principal repaid: " + currency(repayment.principal));
+  if (repayment.extra > 0)
+    $("#repayments").append(" (of which " + currency(repayment.extra) + " extra)");
+  $("#repayments").append("<br>Principal remaining: " + currency(repayment.remaining));
+
+
+  // plot
+  plotRepayment(canvas, repayment);
+
+}).change();
+
+
+// options
+$("#options").change(function() {
+  var currencySymbol = $("input:radio[name=currency]:checked").val();
+  currency = setCurrency(currencySymbol);
+  $("span.currency").text(currencySymbol);
+  $("#inputs").trigger("change");
+}).change();
+
+// toggle boxes
+$("em.toggle + div.boxContent").hide();
+$("em.toggle").click(function() {
+  $(this).siblings("div.boxContent").slideToggle("fast");
+});
+
+
+// slider
+$("#slider").slider({ value: 24, min: 1, max: actualperiods, step: 1,
+                      animate: true,
+                      slide: function(event, ui) {
+                               $("#currentperiod").text(ui.value);
+                               $("#inputs").trigger("change");
+                             }
+                   });
+
+function updateFields(amount, rate, years,
+                      overpayment, actualperiods, currentperiod) {
+  $("#amount").val(amount);
+  $("#rate").val(rate);
+  $("#years").val(years);
+  $("#overpayment").val(overpayment);
+  $("#currentperiod").text(currentperiod);
+  $("#actualperiods").text(actualperiods);
+  $("#slider").slider("option", "max", actualperiods);
+  $("#slider").slider("value", currentperiod);
+}
+
+</script>
+
+</body>
+</html>
