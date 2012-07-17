@@ -47,31 +47,42 @@ function computePeriods(amount, totalPayment, monthlyRate) {
     return Math.ceil((-num / den).toFixed(2));
 }
 
-function computePayment(amount, rate, years, overpayment) {
-    var monthlyRate = rate / 12 / 100;
-    var periods = years * 12;
-    var payment = pmt(monthlyRate, periods, amount);
-    var actual = computePeriods(amount, payment + overpayment, monthlyRate);
-    return {
-        'amount': amount,
-        'payment': payment,
-        'overpayment': overpayment,
-        'periods': periods,
-        'actualperiods': actual,
-        'monthlyRate': monthlyRate
-    }
+function computePayment(data) {
+    var m = data;
+    m.monthlyRate = m.rate / 12 / 100;
+    m.monthlyNextRate = m.nextrate / 12 /100;
+    m.firstperiods = m.nextrateyear * 12;
+    m.nextperiods = (m.years - m.nextrateyear) * 12;
+    m.periods = m.firstperiods + m.nextperiods;
+    m.payment = pmt(m.monthlyRate, m.periods, m.amount);
+    m.orignextamount = remprinc(m.payment, m.monthlyRate,
+                                m.firstperiods, m.amount);
+    m.nextamount = remprinc(m.payment + m.overpayment, m.monthlyRate,
+                            m.firstperiods, m.amount);
+    m.orignextpayment = pmt(m.monthlyNextRate, m.nextperiods, m.orignextamount);
+    m.nextpayment = pmt(m.monthlyNextRate, m.nextperiods, m.nextamount);
+    m.actualperiods = m.firstperiods + computePeriods(m.nextamount, m.nextpayment + m.overpayment, m.monthlyNextRate);
+    return m;
 }
 
 function computeRepayment(mortgage, currentperiod) {
-    var amount = mortgage.amount;
-    var principal = cumprinc(mortgage.payment + mortgage.overpayment,
-                             mortgage.monthlyRate, currentperiod, amount);
-    principal = Math.min(principal, amount);
-    var extra =  mortgage.overpayment * currentperiod;
+    var principal;
+    if (currentperiod <= mortgage.firstperiods) {
+        principal = cumprinc(mortgage.payment + mortgage.overpayment,
+                             mortgage.monthlyRate,
+                             currentperiod, mortgage.amount);
+    } else {
+        principal = cumprinc(mortgage.nextpayment + mortgage.overpayment,
+                             mortgage.monthlyNextRate,
+                             currentperiod - mortgage.firstperiods,
+                             mortgage.nextamount);
+        principal += mortgage.amount - mortgage.nextamount;
+    }
+    principal = Math.min(principal, mortgage.amount);
     return {
         'principal': principal,
-        'extra': extra,
-        'remaining': amount - principal
+        'extra': mortgage.overpayment * currentperiod,
+        'remaining': mortgage.amount - principal
     }
 }
 
