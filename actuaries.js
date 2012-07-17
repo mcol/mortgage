@@ -102,17 +102,17 @@ function initRaphael(element) {
 }
 
 function plotRepayment(raphael, repayment) {
-    function drawRect(left, width, hue) {
+    function drawRect(left, width, colour) {
         width = width * raphael.width;
         var r = raphael.paper.rect(left, 0, width, raphael.height);
-        r.attr({fill: Raphael.hsb(hue, .75, 1)});
+        r.attr({fill: colour});
         return left + width;
     }
     var extraPaymRect = repayment.extra / amount;
     var remainingRect = repayment.remaining / amount;
     var principalRect = 1 - extraPaymRect - remainingRect;
     var left = 0;
-    left = drawRect(left, principalRect, 0.4);
-    left = drawRect(left, extraPaymRect, 0.1);
-    left = drawRect(left, remainingRect, 0.0);
+    left = drawRect(left, principalRect, "limegreen");
+    left = drawRect(left, extraPaymRect, "gold");
+    left = drawRect(left, remainingRect, "lightgrey");
 }
