@@ -25,9 +25,14 @@ function remprinc(payment, rate, currentPeriod, presentValue) {
 
 ////////////////////////////////
 
+Number.prototype.toMoney = function() {
+    if (!isFinite(this)) return this;
+    return parseInt(this).toLocaleString() + "." + this.toFixed(2).slice(-2);
+}
+
 function setCurrency(currency) {
     return function(amount) {
-        return currency + " " + amount.toFixed(2);
+        return currency + " " + amount.toMoney();
     }
 }
 
