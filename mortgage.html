@@ -3,7 +3,7 @@
     <title>Mortgage computations</title>
     <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.8.21.custom.min.js"></script>
-    <script type="text/javascript" src="raphael-min.js"></script>
+    <script type="text/javascript" src="d3.v2.min.js"></script>
     <script type="text/javascript" src="actuaries.js"></script>
     <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -118,8 +118,6 @@ var actualperiods;
 var currentperiod = $("#currentperiod").text();
 var currency = setCurrency($("input:radio[name=currency]:checked").val());
 
-var canvas = initRaphael("#canvas");
-
 $("#inputs").change(function() {
 
   // input data
@@ -165,7 +163,7 @@ $("#inputs").change(function() {
 
 
   // plot
-  plotRepayment(canvas, repayment);
+  plotRepayment("#canvas", repayment);
 
 }).change();
 

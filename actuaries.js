@@ -71,48 +71,60 @@ function computePayment(data) {
 }
 
 function computeRepayment(mortgage, currentperiod) {
-    var principal;
+    var principal, origprincipal;
     if (currentperiod <= mortgage.firstperiods) {
         principal = cumprinc(mortgage.payment + mortgage.overpayment,
                              mortgage.monthlyRate,
                              currentperiod, mortgage.amount);
+        origprincipal = cumprinc(mortgage.payment,
+                                 mortgage.monthlyRate,
+                                 currentperiod, mortgage.amount);
     } else {
         principal = cumprinc(mortgage.nextpayment + mortgage.overpayment,
                              mortgage.monthlyNextRate,
                              currentperiod - mortgage.firstperiods,
                              mortgage.nextamount);
         principal += mortgage.amount - mortgage.nextamount;
+        origprincipal = cumprinc(mortgage.orignextpayment,
+                                 mortgage.monthlyNextRate,
+                                 currentperiod - mortgage.firstperiods,
+                                 mortgage.orignextamount);
+        origprincipal += mortgage.amount - mortgage.orignextamount;
     }
     principal = Math.min(principal, mortgage.amount);
     return {
         'principal': principal,
+        'origprincipal': origprincipal,
         'extra': mortgage.overpayment * currentperiod,
         'remaining': mortgage.amount - principal
     }
 }
 
-function initRaphael(element) {
-    var el = $(element);
-    var width = parseInt(el.css("width"));
-    var height = parseInt(el.css("height"));
-    var paper = new Raphael(el[0], width, height);
-    return {'paper': paper,
-            'width': width,
-            'height': height};
-}
+function plotRepayment(element, repayment) {
+    var data = [{width: amount, colour: "lightgrey"},
+                {width: repayment.principal, colour: "gold"},
+                {width: repayment.origprincipal, colour: "limegreen"}];
 
-function plotRepayment(raphael, repayment) {
-    function drawRect(left, width, colour) {
-        width = width * raphael.width;
-        var r = raphael.paper.rect(left, 0, width, raphael.height);
-        r.attr({fill: colour});
-        return left + width;
-    }
-    var extraPaymRect = repayment.extra / amount;
-    var remainingRect = repayment.remaining / amount;
-    var principalRect = 1 - extraPaymRect - remainingRect;
-    var left = 0;
-    left = drawRect(left, principalRect, "limegreen");
-    left = drawRect(left, extraPaymRect, "gold");
-    left = drawRect(left, remainingRect, "lightgrey");
+    var chart = d3.select(element);
+
+    var width = parseInt(chart.style("width"));
+    var height = parseInt(chart.style("height"));
+    var xScale = d3.scale.linear()
+        .domain([0, amount])
+        .range([0, width]);
+
+    chart.select("svg").remove();
+    var svg = chart.append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    svg.selectAll(".barchart").data(data).enter()
+        .append("rect")
+        .attr("x", xScale(0))
+        .attr("y", 0.5)
+        .attr("width", function(d) { return xScale(d.width); })
+        .attr("height", height - 0.5)
+        .style("fill", function(d) { return d.colour; })
+        .style("stroke", "black")
+        .style("stroke-width", 1);
 }
