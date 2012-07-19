@@ -107,11 +107,12 @@ function plotRepayment(element, repayment) {
 
     var chart = d3.select(element);
 
+    var mar = 20;
     var width = parseInt(chart.style("width"));
     var height = parseInt(chart.style("height"));
     var xScale = d3.scale.linear()
         .domain([0, amount])
-        .range([0, width]);
+        .range([mar, width - mar]);
 
     chart.select("svg").remove();
     var svg = chart.append("svg")
@@ -122,9 +123,20 @@ function plotRepayment(element, repayment) {
         .append("rect")
         .attr("x", xScale(0))
         .attr("y", 0.5)
-        .attr("width", function(d) { return xScale(d.width); })
-        .attr("height", height - 0.5)
+        .attr("width", function(d) { return xScale(d.width) - mar; })
+        .attr("height", height - mar - 0.5)
         .style("fill", function(d) { return d.colour; })
         .style("stroke", "black")
         .style("stroke-width", 1);
+
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom")
+        .ticks(5)
+        .tickSubdivide(1);
+
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0," + (height - mar)  + ")")
+        .call(xAxis);
 }
