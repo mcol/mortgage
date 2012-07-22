@@ -77,6 +77,7 @@
     <label for="nextrateyear">After years</label>
     <input id="nextrateyear" type="text" class="input" value="2" size="1" maxLength="2" />
     <br/><br/>
+    <div id="overpaymentslider" style="margin: 10px 0; width: 50%;"></div>
     <label for="overpayment">Overpayment (<span class="currency">&pound;</span>)</label>
     <input id="overpayment" type="text" class="input" value="0" size="2" maxLength="4" />
   </div>
@@ -194,6 +195,11 @@ $("em.toggle").click(function() {
 });
 
 
+$("#overpayment").change(function() {
+  overpayment = clamp(parseInt($("#overpayment").val()), 0, 1000);
+  $("#inputs").trigger("change");
+}).change();
+
 // slider
 $("#periodslider").slider({ value: 24, min: 1, max: actualperiods, step: 1,
                       animate: true,
@@ -202,6 +208,15 @@ $("#periodslider").slider({ value: 24, min: 1, max: actualperiods, step: 1,
                                $("#inputs").trigger("change");
                              }
                    });
+
+$("#overpaymentslider").slider({ value: overpayment, min: 0, max: 1000, step: 25,
+                      animate: true,
+                      slide: function(event, ui) {
+                               $("#overpayment").val(ui.value);
+                               $("#overpayment").trigger("change");
+                             }
+                   });
+
 
 function updateFields(amount, rate, years, nextrate, nextrateyear,
                       overpayment, actualperiods, currentperiod) {
@@ -215,6 +230,7 @@ function updateFields(amount, rate, years, nextrate, nextrateyear,
   $("#actualperiods").text(actualperiods);
   $("#periodslider").slider("option", "max", actualperiods);
   $("#periodslider").slider("value", currentperiod);
+  $("#overpaymentslider").slider("value", overpayment);
 }
 
 </script>
