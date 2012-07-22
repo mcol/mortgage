@@ -95,8 +95,8 @@
   <div class="boxContent">
     Repayment will happen in <span id="actualperiods">0</span> periods.<br>
     After <span id="currentperiod" class="bold">24</span> periods:
+    <div id="periodslider" style="margin: 10px 0; width: 50%;"></div>
     <div id="repayments"></div>
-    <div id="slider" style="margin-top: 5px; width: 50%;"></div>
     <div id="canvas"></div>
   </div>
 </div>
@@ -195,7 +195,7 @@ $("em.toggle").click(function() {
 
 
 // slider
-$("#slider").slider({ value: 24, min: 1, max: actualperiods, step: 1,
+$("#periodslider").slider({ value: 24, min: 1, max: actualperiods, step: 1,
                       animate: true,
                       slide: function(event, ui) {
                                $("#currentperiod").text(ui.value);
@@ -213,8 +213,8 @@ function updateFields(amount, rate, years, nextrate, nextrateyear,
   $("#overpayment").val(overpayment);
   $("#currentperiod").text(currentperiod);
   $("#actualperiods").text(actualperiods);
-  $("#slider").slider("option", "max", actualperiods);
-  $("#slider").slider("value", currentperiod);
+  $("#periodslider").slider("option", "max", actualperiods);
+  $("#periodslider").slider("value", currentperiod);
 }
 
 </script>
