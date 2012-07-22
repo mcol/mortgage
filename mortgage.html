@@ -130,6 +130,8 @@ var actualperiods;
 var currentperiod = $("#currentperiod").text();
 var currency = setCurrency($("input:radio[name=currency]:checked").val());
 
+var mortgage = new Mortgage();
+
 $("#inputs").change(function() {
 
   // input data
@@ -143,30 +145,31 @@ $("#inputs").change(function() {
   overpayment = clamp(parseInt($("#overpayment").val()), 0, 1000);
 
   // computations
-  var data = {'amount': amount,
-              'rate': rate,
-              'years': years,
-              'nextrate': nextrate,
-              'nextrateyear': nextrateyear,
-              'overpayment': overpayment
-             };
+  mortgage.amount(amount)
+          .years(years)
+          .rate(rate)
+          .rate(nextrate, nextrateyear)
+          .overpayment(overpayment);
 
-  var mortgage = computePayment(data);
+  var origplan = mortgage.paymentplan();
+  var mpayment = mortgage.payment();
+  var periods = mortgage.periods();
 
-  actualperiods = mortgage.actualperiods;
+  actualperiods = mortgage.actualperiods();
   currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
 
-  var repayment = computeRepayment(mortgage, currentperiod);
+  var repayment = mortgage.computeRepayment(currentperiod);
 
   updateFields(amount, rate, years, nextrate, nextrateyear,
                overpayment, actualperiods, currentperiod);
 
   // report results
-  $("#periods").text(mortgage.periods);
-  $("#payment").html($("<ul>")
-                 .append($("<li>").append(mortgage.firstperiods + " payments of " + currency(mortgage.payment)))
-                 .append($("<li>").append(mortgage.nextperiods + " payments of " + currency(mortgage.orignextpayment)))
-               );
+  $("#periods").text(mortgage.years() * 12);
+  $("#payment").html($("<ul>"));
+  $.each(periods, function(i) {
+     $("#payment ul").append($("<li>")
+                     .append(periods[i] + " payments of " + currency(origplan[i])));
+  });
 
   $("#repayments").html("Principal repaid: " + currency(repayment.principal));
   if (repayment.extra > 0)

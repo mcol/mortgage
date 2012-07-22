@@ -25,14 +25,19 @@ function remprinc(payment, rate, currentPeriod, presentValue) {
 
 ////////////////////////////////
 
-Number.prototype.toMoney = function() {
+Number.prototype.toCurrency = function() {
     if (!isFinite(this)) return this;
-    return parseInt(this).toLocaleString() + "." + this.toFixed(2).slice(-2);
+    var self = this.toMoney();
+    return parseInt(self).toLocaleString() + "." + self.toFixed(2).slice(-2);
+}
+
+Number.prototype.toMoney = function() {
+    return Math.round(this) / 100;
 }
 
 function setCurrency(currency) {
     return function(amount) {
-        return currency + " " + amount.toMoney();
+        return currency + " " + amount.toCurrency();
     }
 }
 
@@ -46,62 +51,118 @@ function clamp(val, min, max) {
     return val;
 }
 
-function computePeriods(amount, totalPayment, monthlyRate) {
-    var num = Math.log(1 - amount / totalPayment * monthlyRate);
-    var den = Math.log(1 + monthlyRate);
-    return Math.ceil((-num / den).toFixed(2));
-}
 
-function computePayment(data) {
-    var m = data;
-    m.monthlyRate = m.rate / 12 / 100;
-    m.monthlyNextRate = m.nextrate / 12 /100;
-    m.firstperiods = m.nextrateyear * 12;
-    m.nextperiods = (m.years - m.nextrateyear) * 12;
-    m.periods = m.firstperiods + m.nextperiods;
-    m.payment = pmt(m.monthlyRate, m.periods, m.amount);
-    m.orignextamount = remprinc(m.payment, m.monthlyRate,
-                                m.firstperiods, m.amount);
-    m.nextamount = remprinc(m.payment + m.overpayment, m.monthlyRate,
-                            m.firstperiods, m.amount);
-    m.orignextpayment = pmt(m.monthlyNextRate, m.nextperiods, m.orignextamount);
-    m.nextpayment = pmt(m.monthlyNextRate, m.nextperiods, m.nextamount);
-    m.actualperiods = m.firstperiods + computePeriods(m.nextamount, m.nextpayment + m.overpayment, m.monthlyNextRate);
-    return m;
-}
+var Mortgage = function() {
+    this._amount = 0;
+    this._rate = [];
+    this._period = [];
+    this._payment = [];
+    this._overpayment = 0;
+};
 
-function computeRepayment(mortgage, currentperiod) {
-    var principal, origprincipal;
-    if (currentperiod <= mortgage.firstperiods) {
-        principal = cumprinc(mortgage.payment + mortgage.overpayment,
-                             mortgage.monthlyRate,
-                             currentperiod, mortgage.amount);
-        origprincipal = cumprinc(mortgage.payment,
-                                 mortgage.monthlyRate,
-                                 currentperiod, mortgage.amount);
-    } else {
-        principal = cumprinc(mortgage.nextpayment + mortgage.overpayment,
-                             mortgage.monthlyNextRate,
-                             currentperiod - mortgage.firstperiods,
-                             mortgage.nextamount);
-        principal += mortgage.amount - mortgage.nextamount;
-        origprincipal = cumprinc(mortgage.orignextpayment,
-                                 mortgage.monthlyNextRate,
-                                 currentperiod - mortgage.firstperiods,
-                                 mortgage.orignextamount);
-        origprincipal += mortgage.amount - mortgage.orignextamount;
+Mortgage.prototype = {
+
+    amount: function(value) {
+        if (!arguments.length) return this._amount;
+        this._amount = value * 100;
+        return this;
+    },
+
+    years: function(value) {
+        if (!arguments.length) return this._periods / 12;
+        this._periods = value * 12;
+        this._period[0] = value * 12;
+        return this;
+    },
+
+    rate: function(value, year) {
+        if (!arguments.length) return this._rate[0] * 12 * 100;
+        if (value <= 0) {
+            this._rate = this._rate.slice(0, 1);
+            this._period = this._period.slice(0, 1);
+            this._period[0] = this._periods;
+            this._payment = this._payment.slice(0, 1);
+            return this;
+        }
+        if (arguments.length == 1) {
+            this._rate[0] = value / 12 / 100;
+            return this;
+        }
+        this._rate[1] = value / 12 / 100;
+        this._period[0] = year * 12;
+        this._period[1] = this._periods - this._period[0];
+        return this;
+    },
+
+    overpayment: function(value) {
+        if (!arguments.length) return this._overpayment;
+        this._overpayment = value * 100;
+        return this;
+    },
+
+    periods: function() {
+        return this._period;
+    },
+
+    paymentplan: function() {
+        var payment = [];
+        payment[0] = pmt(this._rate[0], this._periods, this._amount);
+        if (this._period.length > 1) {
+            var fv = remprinc(payment[0], this._rate[0], this._period[0], this._amount);
+            payment[1] = pmt(this._rate[1], this._period[1], fv);
+        }
+        return payment;
+    },
+
+    payment: function() {
+        this._payment[0] = pmt(this._rate[0], this._periods, this._amount) + this._overpayment;
+        if (this._period.length > 1) {
+            var fv = remprinc(this._payment[0], this._rate[0], this._period[0], this._amount);
+            this._payment[1] = pmt(this._rate[1], this._period[1], fv) + this._overpayment;
+        }
+        return this._payment;
+    },
+
+    computeRepayment: function(currentperiod) {
+        var principal, origprincipal;
+        var origplan = this.paymentplan();
+        if (currentperiod <= this._period[0]) {
+            principal = cumprinc(this._payment[0], this._rate[0], currentperiod, this._amount);
+            origprincipal = cumprinc(origplan[0], this._rate[0], currentperiod, this._amount);
+        } else {
+            var fv = remprinc(this._payment[0], this._rate[0], this._period[0], this._amount);
+            var origfv = remprinc(origplan[0], this._rate[0], this._period[0], this._amount);
+            var pd = currentperiod - this._period[0];
+            principal = cumprinc(this._payment[1], this._rate[1], pd, fv);
+            principal += this._amount - fv;
+            origprincipal = cumprinc(origplan[1], this._rate[1], pd, origfv);
+            origprincipal += this._amount - origfv;
+        }
+        principal = Math.min(principal, this._amount);
+        return {
+            'principal': principal,
+            'origprincipal': origprincipal,
+            'extra': this._overpayment * currentperiod,
+            'remaining': this._amount - principal
+        }
+    },
+
+    actualperiods: function() {
+        function countPeriods(rate, payment, amount) {
+            var num = Math.log(1 - amount / payment * rate);
+            var den = Math.log(1 + rate);
+            return Math.ceil((-num / den).toFixed(2));
+        }
+        if (this._period.length == 1)
+            return countPeriods(this._rate[0], this._payment[0], this._amount);
+        var fv = remprinc(this._payment[0], this._rate[0], this._period[0], this._amount);
+        return this._period[0] + countPeriods(this._rate[1], this._payment[1], fv);
     }
-    principal = Math.min(principal, mortgage.amount);
-    return {
-        'principal': principal,
-        'origprincipal': origprincipal,
-        'extra': mortgage.overpayment * currentperiod,
-        'remaining': mortgage.amount - principal
-    }
-}
+
+};
 
 function plotRepayment(element, repayment) {
-    var data = [{width: amount, colour: "lightgrey"},
+    var data = [{width: mortgage.amount(), colour: "lightgrey"},
                 {width: repayment.principal, colour: "gold"},
                 {width: repayment.origprincipal, colour: "limegreen"}];
 
@@ -111,8 +172,8 @@ function plotRepayment(element, repayment) {
     var width = parseInt(chart.style("width"));
     var height = parseInt(chart.style("height"));
     var xScale = d3.scale.linear()
-        .domain([0, amount])
-        .range([mar, width - mar]);
+        .domain([0, mortgage.amount()])
+        .range([mar, width - 2 * mar]);
 
     chart.select("svg").remove();
     var svg = chart.append("svg")
@@ -132,6 +193,7 @@ function plotRepayment(element, repayment) {
     var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient("bottom")
+        .tickFormat(function(d) { return currency(d); })
         .ticks(5)
         .tickSubdivide(1);
 
