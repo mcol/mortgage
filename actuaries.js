@@ -12,12 +12,12 @@ function s_ni(rate, nPeriods) {
 
 // compute monthly payment
 function pmt(rate, nPeriods, presentValue) {
-    return presentValue / a_ni(rate, nPeriods);
+    return Math.round(presentValue / a_ni(rate, nPeriods));
 }
 
 // principal repayed up to currentPeriod
 function cumprinc(payment, rate, currentPeriod, presentValue) {
-    return (payment - presentValue * rate) * s_ni(rate, currentPeriod);
+    return Math.round((payment - presentValue * rate) * s_ni(rate, currentPeriod));
 }
 
 // principal to be repaid up to currentPeriod
