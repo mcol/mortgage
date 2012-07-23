@@ -1,3 +1,5 @@
+(function() {
+
 // present value of an annuity-immediate
 function a_ni(rate, nPeriods) {
     return (1 - Math.pow(1 + rate, -nPeriods)) / rate;
@@ -191,3 +193,9 @@ function plotRepayment(element, repayment) {
         .attr("transform", "translate(0," + (height - mar)  + ")")
         .call(xAxis);
 }
+
+window.Mortgage = Mortgage;
+window.setCurrency = setCurrency;
+window.plotRepayment = plotRepayment;
+
+})();
