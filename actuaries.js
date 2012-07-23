@@ -41,17 +41,6 @@ function setCurrency(currency) {
     }
 }
 
-function clamp(val, min, max) {
-    if (isNaN(val) || val == "")
-        val = 0;
-    if (val < min)
-        return min;
-    if (val > max)
-        return max;
-    return val;
-}
-
-
 var Mortgage = function() {
     this._amount = 0;
     this._rate = [];

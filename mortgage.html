@@ -111,8 +111,18 @@
   </div>
 </div>
 
-
 <script type="text/javascript">
+
+function clamp(val, min, max) {
+    if (isNaN(val) || val == "")
+        val = 0;
+    if (val < min)
+        return min;
+    if (val > max)
+        return max;
+    return val;
+}
+
 var minRate = 0.25;
 var maxRate = 15;
 
