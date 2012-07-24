@@ -177,12 +177,21 @@ function plotRepayment(element, repayment) {
     svg.selectAll(".barchart").data(data).enter()
         .append("rect")
         .attr("x", xScale(0))
-        .attr("y", 0.5)
+        .attr("y", mar)
         .attr("width", function(d) { return xScale(d.width) - mar; })
-        .attr("height", height - mar - 0.5)
+        .attr("height", height - 2 * mar - 0.5)
         .style("fill", function(d) { return d.colour; })
         .style("stroke", "black")
         .style("stroke-width", 1);
+
+    svg.selectAll("text.labels")
+        .data([repayment.principal, repayment.remaining]).enter()
+        .append("text")
+        .attr("class", "axis")
+        .attr("x", function(d, i) { return xScale(i ? mortgage.amount() : 0); })
+        .attr("y", 18)
+        .attr("text-anchor", function(d, i) { return i ? "end" : "start"; })
+        .text(function(d) { return currency(d); });
 
     var xAxis = d3.svg.axis()
         .scale(xScale)
