@@ -222,7 +222,7 @@ $("#overpayment").change(function() {
 }).change();
 
 // slider
-$("#periodslider").slider({ value: 24, min: 1, max: actualperiods, step: 1,
+$("#periodslider").slider({ value: 24, min: 0, max: actualperiods, step: 1,
                       animate: true,
                       slide: function(event, ui) {
                                $("#currentperiod").text(ui.value);
