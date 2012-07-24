@@ -62,7 +62,10 @@ Mortgage.prototype = {
     years: function(value) {
         if (!arguments.length) return this._periods / 12;
         this._periods = value * 12;
-        this._period[0] = value * 12;
+        if (this._period.length > 1)
+            this._period[1] = this._periods - this._period[0];
+        else
+            this._period[0] = this._periods;
         return this;
     },
 
