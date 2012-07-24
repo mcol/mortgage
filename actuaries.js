@@ -155,7 +155,8 @@ Mortgage.prototype = {
 
 };
 
-function plotRepayment(element, repayment) {
+function plotRepayment(element, mortgage, currentperiod) {
+    var repayment = mortgage.computeRepayment(currentperiod);
     var data = [{width: mortgage.amount(), colour: "lightgrey"},
                 {width: repayment.principal, colour: "gold"},
                 {width: repayment.planprincipal, colour: "limegreen"}];

@@ -175,9 +175,6 @@ $("#inputs").change(function() {
   }
 
   currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
-
-  var repayment = mortgage.computeRepayment(currentperiod);
-
   updateFields(amount, rate, years, nextrate, nextrateyear,
                overpayment, actualperiods, actualyears, currentperiod);
 
@@ -190,7 +187,7 @@ $("#inputs").change(function() {
   });
 
   // plot
-  plotRepayment("#canvas", repayment);
+  plotRepayment("#canvas", mortgage, currentperiod);
 
 }).change();
 
