@@ -118,7 +118,7 @@ Mortgage.prototype = {
         };
     },
 
-    computeRepayment: function(currentperiod) {
+    principal: function(currentperiod) {
         var prin, plan, pay = this.payment();
         if (currentperiod <= this._period[0]) {
             plan = cumprinc(pay.plan[0], this._rate[0],
@@ -135,10 +135,10 @@ Mortgage.prototype = {
         prin = Math.min(prin, this._amount);
         var extra = this._overpayment * currentperiod;
         return {
-            planprincipal: plan,
-            principal: prin,
+            planned: plan,
+            paid: prin,
             extra: extra,
-            remaining: this._amount - prin
+            left: this._amount - prin
         };
     },
 
@@ -156,10 +156,10 @@ Mortgage.prototype = {
 };
 
 function plotRepayment(element, mortgage, currentperiod) {
-    var repayment = mortgage.computeRepayment(currentperiod);
+    var principal = mortgage.principal(currentperiod);
     var data = [{width: mortgage.amount(), colour: "lightgrey"},
-                {width: repayment.principal, colour: "gold"},
-                {width: repayment.planprincipal, colour: "limegreen"}];
+                {width: principal.paid, colour: "gold"},
+                {width: principal.planned, colour: "limegreen"}];
 
     var chart = d3.select(element);
 
@@ -186,7 +186,7 @@ function plotRepayment(element, mortgage, currentperiod) {
         .style("stroke-width", 1);
 
     svg.selectAll("text.labels")
-        .data([repayment.principal, repayment.remaining]).enter()
+        .data([principal.paid, principal.left]).enter()
         .append("text")
         .attr("class", "axis")
         .attr("x", function(d, i) { return xScale(i ? mortgage.amount() : 0); })
