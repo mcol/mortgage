@@ -162,8 +162,7 @@ $("#inputs").change(function() {
           .rate(nextrate, nextrateyear)
           .overpayment(overpayment);
 
-  var origplan = mortgage.paymentplan();
-  var mpayment = mortgage.payment();
+  var payment = mortgage.payment();
   var periods = mortgage.periods();
 
   actualperiods = mortgage.actualperiods();
@@ -187,7 +186,7 @@ $("#inputs").change(function() {
   $("#payment").html($("<ul>"));
   $.each(periods, function(i) {
      $("#payment ul").append($("<li>")
-                     .append(periods[i] + " payments of " + currency(origplan[i])));
+                     .append(periods[i] + " payments of " + currency(payment.plan[i])));
   });
 
   $("#repayments").html("Principal repaid: " + currency(repayment.principal));

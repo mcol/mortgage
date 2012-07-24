@@ -47,6 +47,7 @@ var Mortgage = function() {
     this._amount = 0;
     this._rate = [];
     this._period = [];
+    this._plan = [];
     this._payment = [];
     this._overpayment = 0;
 };
@@ -75,6 +76,7 @@ Mortgage.prototype = {
             this._rate = this._rate.slice(0, 1);
             this._period = this._period.slice(0, 1);
             this._period[0] = this._periods;
+            this._plan = this._plan.slice(0, 1);
             this._payment = this._payment.slice(0, 1);
             return this;
         }
@@ -98,47 +100,46 @@ Mortgage.prototype = {
         return this._period;
     },
 
-    paymentplan: function() {
-        var payment = [];
-        payment[0] = pmt(this._rate[0], this._periods, this._amount);
-        if (this._period.length > 1) {
-            var fv = remprinc(payment[0], this._rate[0], this._period[0], this._amount);
-            payment[1] = pmt(this._rate[1], this._period[1], fv);
-        }
-        return payment;
-    },
-
     payment: function() {
-        this._payment[0] = pmt(this._rate[0], this._periods, this._amount) + this._overpayment;
+        this._plan[0] = pmt(this._rate[0], this._periods, this._amount);
+        this._payment[0] = this._plan[0] + this._overpayment;
         if (this._period.length > 1) {
-            var fv = remprinc(this._payment[0], this._rate[0], this._period[0], this._amount);
-            this._payment[1] = pmt(this._rate[1], this._period[1], fv) + this._overpayment;
+            this._fvp = remprinc(this._plan[0], this._rate[0],
+                                 this._period[0], this._amount);
+            this._fvo = remprinc(this._payment[0], this._rate[0],
+                                 this._period[0], this._amount);
+            this._plan[1] = pmt(this._rate[1], this._period[1], this._fvp);
+            this._payment[1] = pmt(this._rate[1], this._period[1], this._fvo)
+                             + this._overpayment;
         }
-        return this._payment;
+        return {
+            plan: this._plan,
+            actual: this._payment
+        };
     },
 
     computeRepayment: function(currentperiod) {
-        var principal, origprincipal;
-        var origplan = this.paymentplan();
+        var prin, plan, pay = this.payment();
         if (currentperiod <= this._period[0]) {
-            principal = cumprinc(this._payment[0], this._rate[0], currentperiod, this._amount);
-            origprincipal = cumprinc(origplan[0], this._rate[0], currentperiod, this._amount);
+            plan = cumprinc(pay.plan[0], this._rate[0],
+                            currentperiod, this._amount);
+            prin = cumprinc(pay.actual[0], this._rate[0],
+                            currentperiod, this._amount);
         } else {
-            var fv = remprinc(this._payment[0], this._rate[0], this._period[0], this._amount);
-            var origfv = remprinc(origplan[0], this._rate[0], this._period[0], this._amount);
             var pd = currentperiod - this._period[0];
-            principal = cumprinc(this._payment[1], this._rate[1], pd, fv);
-            principal += this._amount - fv;
-            origprincipal = cumprinc(origplan[1], this._rate[1], pd, origfv);
-            origprincipal += this._amount - origfv;
+            plan = cumprinc(pay.plan[1], this._rate[1], pd, this._fvp)
+                 + this._amount - this._fvp;
+            prin = cumprinc(pay.actual[1], this._rate[1], pd, this._fvo)
+                 + this._amount - this._fvo;
         }
-        principal = Math.min(principal, this._amount);
+        prin = Math.min(prin, this._amount);
+        var extra = this._overpayment * currentperiod;
         return {
-            'principal': principal,
-            'origprincipal': origprincipal,
-            'extra': this._overpayment * currentperiod,
-            'remaining': this._amount - principal
-        }
+            planprincipal: plan,
+            principal: prin,
+            extra: extra,
+            remaining: this._amount - prin
+        };
     },
 
     actualperiods: function() {
@@ -149,8 +150,7 @@ Mortgage.prototype = {
         }
         if (this._period.length == 1)
             return countPeriods(this._rate[0], this._payment[0], this._amount);
-        var fv = remprinc(this._payment[0], this._rate[0], this._period[0], this._amount);
-        return this._period[0] + countPeriods(this._rate[1], this._payment[1], fv);
+        return this._period[0] + countPeriods(this._rate[1], this._payment[1], this._fvo);
     }
 
 };
@@ -158,7 +158,7 @@ Mortgage.prototype = {
 function plotRepayment(element, repayment) {
     var data = [{width: mortgage.amount(), colour: "lightgrey"},
                 {width: repayment.principal, colour: "gold"},
-                {width: repayment.origprincipal, colour: "limegreen"}];
+                {width: repayment.planprincipal, colour: "limegreen"}];
 
     var chart = d3.select(element);
 
