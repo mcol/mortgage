@@ -1,4 +1,5 @@
 (function() {
+"use strict";
 
 // present value of an annuity-immediate
 function a_ni(rate, nPeriods) {

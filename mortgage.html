@@ -112,9 +112,9 @@
 </div>
 
 <script type="text/javascript">
-
+"use strict";
 function clamp(val, min, max) {
-    if (isNaN(val) || val == "")
+    if (isNaN(val) || val === "")
         val = 0;
     if (val < min)
         return min;
