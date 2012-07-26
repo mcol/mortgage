@@ -16,14 +16,14 @@ function pmt(rate, nPeriods, presentValue) {
     return Math.round(presentValue / a_ni(rate, nPeriods));
 }
 
-// principal repayed up to currentPeriod
-function cumprinc(payment, rate, currentPeriod, presentValue) {
-    return Math.round((payment - presentValue * rate) * s_ni(rate, currentPeriod));
+// principal repayed up to period
+function cumprinc(payment, rate, period, presentValue) {
+    return Math.round((payment - presentValue * rate) * s_ni(rate, period));
 }
 
-// principal to be repaid up to currentPeriod
-function remprinc(payment, rate, currentPeriod, presentValue) {
-    return presentValue - cumprinc(payment, rate, currentPeriod, presentValue);
+// principal to be repaid up to period
+function remprinc(payment, rate, period, presentValue) {
+    return presentValue - cumprinc(payment, rate, period, presentValue);
 }
 
 ////////////////////////////////
