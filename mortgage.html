@@ -183,7 +183,7 @@ $("#inputs").change(function() {
   $("#payment").html($("<ul>"));
   $.each(periods, function(i) {
      $("#payment ul").append($("<li>")
-                     .append(periods[i] + " payments of " + currency(payment.plan[i])));
+                     .append(periods[i] + " payments of " + currency(payment.due[i])));
   });
 
   // plot
