@@ -171,9 +171,7 @@ $("#inputs").change(function() {
     actuallength += " and " + months + (months > 1 ? " months" : " month");
   $("#actuallength").text(actuallength);
 
-  currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
-  updateFields(amount, rate, years, nextrate, nextrateyear,
-               overpayment, actualperiods, currentperiod);
+  updateFields(amount, rate, years, nextrate, nextrateyear, overpayment);
 
   // original plan
   $("#dueperiods").text(mortgage.years() * 12);
@@ -182,6 +180,19 @@ $("#inputs").change(function() {
      $("#duepayment ul")
          .append($("<li>").append(periods[i] + " payments of " + currency(payment.due[i])));
   });
+
+  $("#repaymentoutputs").trigger("change");
+
+}).change();
+
+$("#repaymentoutputs").change(function() {
+
+  currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
+  $("#currentperiod").text(currentperiod);
+  $("#actualperiods").text(actualperiods);
+
+  $("#periodslider").slider("option", "max", actualperiods);
+  $("#periodslider").slider("value", currentperiod);
 
   // plot
   plotRepayment("#canvas", mortgage, currentperiod);
@@ -214,7 +225,7 @@ $("#periodslider").slider({ value: 24, min: 0, max: actualperiods, step: 1,
                       animate: true,
                       slide: function(event, ui) {
                                $("#currentperiod").text(ui.value);
-                               $("#inputs").trigger("change");
+                               $("#repaymentoutputs").trigger("change");
                              }
                    });
 
@@ -228,17 +239,13 @@ $("#overpaymentslider").slider({ value: overpayment, min: 0, max: 1000, step: 25
 
 
 function updateFields(amount, rate, years, nextrate, nextrateyear,
-                      overpayment, actualperiods, currentperiod) {
+                      overpayment) {
   $("#amount").val(amount);
   $("#rate").val(rate);
   $("#years").val(years);
   $("#nextrate").val(nextrate);
   $("#nextrateyear").val(nextrateyear);
   $("#overpayment").val(overpayment);
-  $("#currentperiod").text(currentperiod);
-  $("#actualperiods").text(actualperiods);
-  $("#periodslider").slider("option", "max", actualperiods);
-  $("#periodslider").slider("value", currentperiod);
   $("#overpaymentslider").slider("value", overpayment);
 }
 
