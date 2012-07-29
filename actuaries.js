@@ -46,6 +46,7 @@ function setCurrency(currency) {
 
 var Mortgage = function() {
     this._amount = 0;
+    this._yearlyrate = [];
     this._rate = [];
     this._period = [];
     this._due = { principal: [], payment: [] };
@@ -72,8 +73,9 @@ Mortgage.prototype = {
     },
 
     rate: function(value, year) {
-        if (!arguments.length) return this._rate[0] * 12 * 100;
+        if (!arguments.length) return this._yearlyrate;
         if (value <= 0) {
+            this._yearlyrate = this._yearlyrate.slice(0, 1);
             this._rate = this._rate.slice(0, 1);
             this._period = this._period.slice(0, 1);
             this._period[0] = this._periods;
@@ -82,9 +84,11 @@ Mortgage.prototype = {
             return this;
         }
         if (arguments.length == 1) {
+            this._yearlyrate[0] = value;
             this._rate[0] = value / 12 / 100;
             return this;
         }
+        this._yearlyrate[1] = value;
         this._rate[1] = value / 12 / 100;
         this._period[0] = year * 12;
         this._period[1] = this._periods - this._period[0];
