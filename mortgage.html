@@ -83,7 +83,7 @@
   </div>
 </div>
 
-<div id="paymentoutputs" class="boxed">
+<div id="duepaymentoutputs" class="boxed">
   <em class="boxTitle">Original payment plan</em>
   <div class="boxContent">
     <span id="dueperiods"></span> payments as follows:
@@ -91,10 +91,18 @@
   </div>
 </div>
 
+<div id="actualpaymentoutputs" class="boxed">
+  <em class="boxTitle">Actual payment plan</em>
+  <div class="boxContent">
+    <span id="actualperiods">0</span> payments as follows:
+    <div id="actualpayment"></div>
+  </div>
+</div>
+
 <div id="repaymentoutputs" class="boxed">
   <em class="boxTitle">Repayments</em>
   <div class="boxContent">
-    Repayment will happen in <span id="actualperiods">0</span> periods (<span id="actuallength">0</span>).<br>
+    Repayment will happen in <span id="actuallength">0</span>.<br>
     After <span id="currentperiod" class="bold">24</span> periods:
     <div id="periodslider" style="margin: 10px 0; width: 50%;"></div>
     <div id="repayments"></div>
@@ -121,6 +129,10 @@ function clamp(val, min, max) {
     if (val > max)
         return max;
     return val;
+}
+
+function getPaymentItem(periods, payment) {
+    return $("<li>").append(periods + " payments of " + currency(payment));
 }
 
 var minRate = 0.25;
@@ -177,9 +189,18 @@ $("#inputs").change(function() {
   $("#dueperiods").text(mortgage.years() * 12);
   $("#duepayment").html($("<ul>"));
   $.each(periods, function(i) {
-     $("#duepayment ul")
-         .append($("<li>").append(periods[i] + " payments of " + currency(payment.due[i])));
+      $("#duepayment ul").append(getPaymentItem(periods[i], payment.due[i]));
   });
+
+  // actual plan
+  $("#actualpayment").html($("<ul>"));
+  if (payment.actual.length == 1)
+    $("#actualpayment ul")
+        .append(getPaymentItem(actualperiods, payment.actual[0]));
+  else
+    $("#actualpayment ul")
+        .append(getPaymentItem(periods[0], payment.actual[0]))
+        .append(getPaymentItem(actualperiods - periods[0], payment.actual[1]));
 
   $("#repaymentoutputs").trigger("change");
 
