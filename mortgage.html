@@ -86,15 +86,15 @@
 <div id="paymentoutputs" class="boxed">
   <em class="boxTitle">Original payment plan</em>
   <div class="boxContent">
-    <span id="periods"></span> payments as follows:
-    <div id="payment"></div>
+    <span id="dueperiods"></span> payments as follows:
+    <div id="duepayment"></div>
   </div>
 </div>
 
 <div id="repaymentoutputs" class="boxed">
   <em class="boxTitle">Repayments</em>
   <div class="boxContent">
-    Repayment will happen in <span id="actualperiods">0</span> periods (<span id="actualyears">0</span>).<br>
+    Repayment will happen in <span id="actualperiods">0</span> periods (<span id="actuallength">0</span>).<br>
     After <span id="currentperiod" class="bold">24</span> periods:
     <div id="periodslider" style="margin: 10px 0; width: 50%;"></div>
     <div id="repayments"></div>
@@ -136,7 +136,6 @@ var nextrate;
 var nextrateyear;
 var overpayment;
 var actualperiods;
-var actualyears;
 
 var currentperiod = $("#currentperiod").text();
 var currency = setCurrency($("input:radio[name=currency]:checked").val());
@@ -166,24 +165,22 @@ $("#inputs").change(function() {
   var periods = mortgage.periods();
 
   actualperiods = mortgage.actualperiods();
-  actualyears = Math.floor(actualperiods / 12) + " years";
+  var actuallength = Math.floor(actualperiods / 12) + " years";
   var months = actualperiods % 12;
-  if (months > 0) {
-    actualyears += " and " + months + " month";
-    if (months > 1)
-      actualyears += "s";
-  }
+  if (months > 0)
+    actuallength += " and " + months + (months > 1 ? " months" : " month");
+  $("#actuallength").text(actuallength);
 
   currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
   updateFields(amount, rate, years, nextrate, nextrateyear,
-               overpayment, actualperiods, actualyears, currentperiod);
+               overpayment, actualperiods, currentperiod);
 
-  // report results
-  $("#periods").text(mortgage.years() * 12);
-  $("#payment").html($("<ul>"));
+  // original plan
+  $("#dueperiods").text(mortgage.years() * 12);
+  $("#duepayment").html($("<ul>"));
   $.each(periods, function(i) {
-     $("#payment ul").append($("<li>")
-                     .append(periods[i] + " payments of " + currency(payment.due[i])));
+     $("#duepayment ul")
+         .append($("<li>").append(periods[i] + " payments of " + currency(payment.due[i])));
   });
 
   // plot
@@ -231,7 +228,7 @@ $("#overpaymentslider").slider({ value: overpayment, min: 0, max: 1000, step: 25
 
 
 function updateFields(amount, rate, years, nextrate, nextrateyear,
-                      overpayment, actualperiods, actualyears, currentperiod) {
+                      overpayment, actualperiods, currentperiod) {
   $("#amount").val(amount);
   $("#rate").val(rate);
   $("#years").val(years);
@@ -240,7 +237,6 @@ function updateFields(amount, rate, years, nextrate, nextrateyear,
   $("#overpayment").val(overpayment);
   $("#currentperiod").text(currentperiod);
   $("#actualperiods").text(actualperiods);
-  $("#actualyears").text(actualyears);
   $("#periodslider").slider("option", "max", actualperiods);
   $("#periodslider").slider("value", currentperiod);
   $("#overpaymentslider").slider("value", overpayment);
