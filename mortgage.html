@@ -42,9 +42,6 @@
     font-size: smaller;
     font-style: normal;
   }
-  #canvas {
-    height: 80px;
-  }
   .axis path,
   .axis line {
     fill: none;
@@ -220,7 +217,7 @@ $("#repaymentoutputs").change(function() {
 
   // plot
   plotRepayment("#canvas", mortgage, currentperiod);
-
+  lineRepayment("#canvas", mortgage, currentperiod);
 });
 
 // options

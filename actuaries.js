@@ -138,6 +138,13 @@ Mortgage.prototype = {
         };
     },
 
+    paymentplan: function() {
+        return {
+            due: this._due,
+            actual: this._actual
+        };
+    },
+
     principal: function(currentperiod) {
 	var paid = this._actual.principal[currentperiod]
 	return {
@@ -171,13 +178,14 @@ function plotRepayment(element, mortgage, currentperiod) {
 
     var mar = 20;
     var width = parseInt(chart.style("width"));
-    var height = parseInt(chart.style("height"));
+    var height = 80;
     var xScale = d3.scale.linear()
         .domain([0, mortgage.amount()])
         .range([mar, width - 2 * mar]);
 
-    chart.select("svg").remove();
+    chart.select("#plotrepayment").remove();
     var svg = chart.append("svg")
+        .attr("id", "plotrepayment")
         .attr("width", width)
         .attr("height", height);
 
@@ -213,8 +221,95 @@ function plotRepayment(element, mortgage, currentperiod) {
         .call(xAxis);
 }
 
+function lineRepayment(element, mortgage, currentperiod) {
+    var widemar = 80, mar = 20;
+    var chart = d3.select(element);
+
+    var width = parseInt(chart.style("width"));
+    var height = 300;
+
+    var periods = mortgage.years() * 12;
+
+    var plan = mortgage.paymentplan();
+    var due = plan.due, actual = plan.actual;
+
+    var xScale = d3.scale.linear()
+        .domain([0, periods])
+        .range([widemar, width - 2 * mar]);
+
+    var yScale = d3.scale.linear()
+        .domain([0, mortgage.amount()])
+        .range([mar, height - mar]);
+
+    var xyears = d3.scale.linear()
+        .domain([0, mortgage.years()])
+        .range([widemar, width - 2 * mar]);
+
+    chart.select("#linerepayment").remove();
+    var svg = chart.append("svg")
+        .attr("id", "linerepayment")
+        .attr("width", width)
+        .attr("height", height);
+
+    var origdata = [], overdata = []
+    for (var xx = periods; xx >= 0; xx--) {
+        origdata[xx] = {"x": xx, "y": due.principal[xx]};
+        overdata[xx] = {"x": xx, "y": actual.principal[xx]};
+    }
+
+    var line = d3.svg.line()
+        .x(function(d) { return xScale(d.x) })
+        .y(function(d) { return yScale(d.y) });
+
+    svg.append("path")
+        .data([origdata])
+        .attr("d", line)
+        .style("stroke","grey");
+
+    svg.append("path")
+        .data([overdata])
+        .attr("d", line)
+        .style("stroke","limegreen");
+
+    svg.selectAll("path")
+        .style("fill","none")
+        .style("stroke-width", 3)
+        .style("stroke-linecap", "round");
+
+    var xAxis = d3.svg.axis()
+        .scale(xyears)
+        .orient("bottom")
+        .ticks(5);
+
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0," + (height - mar) + ")")
+        .call(xAxis);
+
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+        .tickFormat(function(d) { return currency(mortgage.amount() - d); })
+        .ticks(5);
+
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(" + widemar + ",0)")
+        .call(yAxis);
+
+    // current point
+    var xc = currentperiod;
+    var yc = actual.principal[xc];
+    svg.append("svg:circle")
+        .attr("cx", xScale(xc))
+        .attr("cy", yScale(yc))
+        .attr("r", 5)
+        .attr("fill", "red");
+}
+
 window.Mortgage = Mortgage;
 window.setCurrency = setCurrency;
 window.plotRepayment = plotRepayment;
+window.lineRepayment = lineRepayment;
 
 })();
