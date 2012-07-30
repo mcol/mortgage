@@ -212,6 +212,7 @@ $("#inputs").change(function() {
 
 }).change();
 
+// repayments
 $("#repaymentoutputs").change(function() {
 
   currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
@@ -224,8 +225,7 @@ $("#repaymentoutputs").change(function() {
   // plot
   plotRepayment("#canvas", mortgage, currentperiod);
 
-}).change();
-
+});
 
 // options
 $("#options").change(function() {
@@ -233,7 +233,7 @@ $("#options").change(function() {
   currency = setCurrency(currencySymbol);
   $("span.currency").text(currencySymbol);
   $("#inputs").trigger("change");
-}).change();
+});
 
 // toggle boxes
 $("em.toggle + div.boxContent").hide();
