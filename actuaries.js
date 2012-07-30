@@ -148,6 +148,13 @@ Mortgage.prototype = {
 	};
     },
 
+    totalpayment: function() {
+        return {
+            due: this._due.totalpayment,
+            actual: this._actual.totalpayment
+        };
+    },
+
     actualperiods: function() {
 	return this._actual.principal.length - 1;
     }

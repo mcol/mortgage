@@ -173,8 +173,9 @@ $("#inputs").change(function() {
           .rate(nextrate, nextrateyear)
           .overpayment(overpayment);
 
-  var payment = mortgage.payment();
   var periods = mortgage.periods();
+  var payment = mortgage.payment();
+  var totalpayment = mortgage.totalpayment();
 
   actualperiods = mortgage.actualperiods();
   var actuallength = Math.floor(actualperiods / 12) + " years";
@@ -191,6 +192,8 @@ $("#inputs").change(function() {
   $.each(periods, function(i) {
       $("#duepayment ul").append(getPaymentItem(periods[i], payment.due[i]));
   });
+  $("#duepayment")
+      .append($("<p>").text("Total payment: " + currency(totalpayment.due)));
 
   // actual plan
   $("#actualpayment").html($("<ul>"));
@@ -201,6 +204,11 @@ $("#inputs").change(function() {
     $("#actualpayment ul")
         .append(getPaymentItem(periods[0], payment.actual[0]))
         .append(getPaymentItem(actualperiods - periods[0], payment.actual[1]));
+
+  var interestsaved = totalpayment.due - totalpayment.actual;
+  $("#actualpayment")
+      .append($("<p>").text("Total payment: " + currency(totalpayment.actual)))
+      .append($("<p>").text("Interest saved: " + currency(interestsaved)));
 
   $("#repaymentoutputs").trigger("change");
 
