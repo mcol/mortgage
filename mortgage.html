@@ -76,10 +76,6 @@
 
     <label for="nextrateyear">After years</label>
     <input id="nextrateyear" type="text" class="input" value="2" size="1" maxLength="2" />
-    <br/><br/>
-    <div id="overpaymentslider" style="margin: 10px 0; width: 50%;"></div>
-    <label for="overpayment">Overpayment (<span class="currency">&pound;</span>)</label>
-    <input id="overpayment" type="text" class="input" value="0" size="2" maxLength="4" />
   </div>
 </div>
 
@@ -94,6 +90,9 @@
 <div id="actualpaymentoutputs" class="boxed">
   <em class="boxTitle">Actual payment plan</em>
   <div class="boxContent">
+    <div id="overpaymentslider" style="margin: 3px 0; width: 350px; float: right;"></div>
+    <p><label for="overpayment">Overpayment (<span class="currency">&pound;</span>)</label>
+    <input id="overpayment" type="text" class="input" value="0" size="2" maxLength="4" /></p>
     <span id="actualperiods">0</span> payments as follows:
     <div id="actualpayment"></div>
   </div>
@@ -146,7 +145,6 @@ var rate;
 var years;
 var nextrate;
 var nextrateyear;
-var overpayment;
 var actualperiods;
 
 var currentperiod = $("#currentperiod").text();
@@ -164,14 +162,11 @@ $("#inputs").change(function() {
   nextrate = clamp(parseFloat($("#nextrate").val()), minRate, maxRate);
   nextrateyear = clamp(parseInt($("#nextrateyear").val()), 0, years);
 
-  overpayment = clamp(parseInt($("#overpayment").val()), 0, 1000);
-
   // computations
   mortgage.amount(amount)
           .years(years)
           .rate(rate)
-          .rate(nextrate, nextrateyear)
-          .overpayment(overpayment);
+          .rate(nextrate, nextrateyear);
 
   var periods = mortgage.periods();
   var payment = mortgage.payment();
@@ -184,7 +179,7 @@ $("#inputs").change(function() {
     actuallength += " and " + months + (months > 1 ? " months" : " month");
   $("#actuallength").text(actuallength);
 
-  updateFields(amount, rate, years, nextrate, nextrateyear, overpayment);
+  updateFields(amount, rate, years, nextrate, nextrateyear);
 
   // original plan
   $("#dueperiods").text(mortgage.years() * 12);
@@ -243,9 +238,19 @@ $("em.toggle").click(function() {
   $(this).siblings("div.boxContent").slideToggle("fast");
 });
 
-
 $("#overpayment").change(function() {
-  overpayment = clamp(parseInt($("#overpayment").val()), 0, 1000);
+  var overpayment = clamp(parseInt($("#overpayment").val()), 0, 1000);
+  mortgage.overpayment(overpayment);
+
+  $("#overpayment").val(overpayment);
+  $("#overpaymentslider")
+      .slider({ value: overpayment, min: 0, max: 1000, step: 25,
+                animate: true,
+                slide: function(event, ui) {
+                               $("#overpayment").val(ui.value);
+                               $("#overpayment").trigger("change");
+                             }
+                });
   $("#inputs").trigger("change");
 }).change();
 
@@ -258,24 +263,12 @@ $("#periodslider").slider({ value: 24, min: 0, max: actualperiods, step: 1,
                              }
                    });
 
-$("#overpaymentslider").slider({ value: overpayment, min: 0, max: 1000, step: 25,
-                      animate: true,
-                      slide: function(event, ui) {
-                               $("#overpayment").val(ui.value);
-                               $("#overpayment").trigger("change");
-                             }
-                   });
-
-
-function updateFields(amount, rate, years, nextrate, nextrateyear,
-                      overpayment) {
+function updateFields(amount, rate, years, nextrate, nextrateyear) {
   $("#amount").val(amount);
   $("#rate").val(rate);
   $("#years").val(years);
   $("#nextrate").val(nextrate);
   $("#nextrateyear").val(nextrateyear);
-  $("#overpayment").val(overpayment);
-  $("#overpaymentslider").slider("value", overpayment);
 }
 
 </script>
