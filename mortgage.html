@@ -137,17 +137,15 @@ function getPaymentItem(periods, payment) {
     return $("<li>").append(periods + " payments of " + currency(payment));
 }
 
+var minAmount = 10000;
+var maxAmount = 1000000;
+
 var minRate = 0.25;
 var maxRate = 15;
 
 var minYears = 5;
 var maxYears = 40;
 
-var amount;
-var rate;
-var years;
-var nextrate;
-var nextrateyear;
 var actualperiods;
 
 var currentperiod = $("#currentperiod").text();
@@ -158,12 +156,12 @@ var mortgage = new Mortgage();
 $("#inputs").change(function() {
 
   // input data
-  amount = clamp(parseInt($("#amount").val()), 10000, 1000000);
-  rate = clamp(parseFloat($("#rate").val()), minRate, maxRate);
-  years = clamp(parseInt($("#years").val()), minYears, maxYears);
-
-  nextrate = clamp(parseFloat($("#nextrate").val()), minRate, maxRate);
-  nextrateyear = clamp(parseInt($("#nextrateyear").val()), 0, years);
+  var amount = clamp(parseInt($("#amount").val()), minAmount, maxAmount);
+  var rate = clamp(parseFloat($("#rate").val()), minRate, maxRate);
+  var years = clamp(parseInt($("#years").val()), minYears, maxYears);
+  var nextrate = clamp(parseFloat($("#nextrate").val()), minRate, maxRate);
+  var nextrateyear = clamp(parseInt($("#nextrateyear").val()), 0, years);
+  updateFields(amount, rate, years, nextrate, nextrateyear);
 
   // computations
   mortgage.amount(amount)
@@ -181,8 +179,6 @@ $("#inputs").change(function() {
   if (months > 0)
     actuallength += " and " + months + (months > 1 ? " months" : " month");
   $("#actuallength").text(actuallength);
-
-  updateFields(amount, rate, years, nextrate, nextrateyear);
 
   // original plan
   $("#dueperiods").text(mortgage.years() * 12);
