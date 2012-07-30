@@ -11,6 +11,9 @@
   label {
     margin-right: 5px;
   }
+  p {
+    margin-bottom: 0;
+  }
   .input {
     border: 1px solid #ccc;
     background: #ffc;
@@ -93,7 +96,7 @@
     <div id="overpaymentslider" style="margin: 3px 0; width: 350px; float: right;"></div>
     <p><label for="overpayment">Overpayment (<span class="currency">&pound;</span>)</label>
     <input id="overpayment" type="text" class="input" value="0" size="2" maxLength="4" /></p>
-    <span id="actualperiods">0</span> payments as follows:
+    <p><span id="actualperiods">0</span> payments as follows:</p>
     <div id="actualpayment"></div>
   </div>
 </div>
@@ -101,8 +104,8 @@
 <div id="repaymentoutputs" class="boxed">
   <em class="boxTitle">Repayments</em>
   <div class="boxContent">
-    Repayment will happen in <span id="actuallength">0</span>.<br>
-    After <span id="currentperiod" class="bold">24</span> periods:
+    <p>Repayment will happen in <span id="actuallength">0</span>.</p>
+    <p>After <span id="currentperiod" class="bold">24</span> periods:</p>
     <div id="periodslider" style="margin: 10px 0; width: 50%;"></div>
     <div id="repayments"></div>
     <div id="canvas"></div>
