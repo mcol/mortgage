@@ -128,7 +128,8 @@ Mortgage.prototype = {
             fv = remprinc(due[0], this._rate[0], pd[0], this._amount);
             due[1] = pmt(this._rate[1], pd[1], fv);
             fv = remprinc(actual[0], this._rate[0], pd[0], this._amount);
-            actual[1] = pmt(this._rate[1], pd[1], fv) + this._overpayment;
+            if (fv > 0)
+                actual[1] = pmt(this._rate[1], pd[1], fv) + this._overpayment;
         }
         this._repaymentplan(this._due, due);
         this._repaymentplan(this._actual, actual);
