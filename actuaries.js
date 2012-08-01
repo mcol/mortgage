@@ -118,6 +118,8 @@ Mortgage.prototype = {
         obj.payment = payment;
         obj.lastpayment = pmt(this._rate[pd], 1, pv);
         obj.totalpayment = totalpayment + obj.lastpayment;
+        var baseactualpayment = payment[pd] - this._overpayment;
+        obj.lastextra = Math.max(obj.lastpayment - baseactualpayment, 0);
     },
 
     payment: function() {
@@ -133,6 +135,7 @@ Mortgage.prototype = {
         }
         this._repaymentplan(this._due, due);
         this._repaymentplan(this._actual, actual);
+        this._due.lastextra = 0;
         return {
             due: due,
             actual: actual
@@ -147,11 +150,17 @@ Mortgage.prototype = {
     },
 
     principal: function(currentperiod) {
-	var paid = this._actual.principal[currentperiod]
+        var paid = this._actual.principal[currentperiod];
+        var extra = this._overpayment * currentperiod;
+        var lastpd = this.actualperiods() - 1;
+        if (currentperiod > lastpd) {
+            paid = this._amount;
+            extra = this._overpayment * lastpd + this._actual.lastextra;
+        }
 	return {
 	    due: this._due.principal[currentperiod],
 	    actual: paid,
-	    extra: this._overpayment * currentperiod,
+	    extra: extra,
 	    left: this._amount - paid
 	};
     },
