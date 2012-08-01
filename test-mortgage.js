@@ -22,6 +22,28 @@ test("Basic methods", function() {
 
 });
 
+test("Adding and removing rates", function() {
+
+    var m = new Mortgage();
+    m.amount(80000)
+     .rate(3.99, 5);
+
+    deepEqual(m.periods(), [60, 0], "Number of periods");
+    deepEqual(m.rate(), [3.99, 3.99], "Rates");
+
+    m.rate(0);
+    deepEqual(m.periods(), [undefined], "Periods after removing a rate");
+    deepEqual(m.rate(), [3.99], "Rates after removing a rate");
+
+    m.rate(4.99, 6);
+    deepEqual(m.periods(), [72, 0], "Number of periods");
+    deepEqual(m.rate(), [3.99, 4.99], "Rates");
+
+    m.years(10);
+    deepEqual(m.periods(), [72, 48], "Number of periods");
+
+});
+
 test("Fixed rate payments", function() {
 
     var m = new Mortgage();

@@ -89,9 +89,11 @@ Mortgage.prototype = {
             return this;
         }
         this._yearlyrate[1] = value;
+        this._yearlyrate[0] = this._yearlyrate[0] || value;
         this._rate[1] = value / 12 / 100;
+        this._rate[0] = this._rate[0] || this._rate[1];
         this._period[0] = year * 12;
-        this._period[1] = this._periods - this._period[0];
+        this._period[1] = (this._periods || this._period[0]) - this._period[0];
         return this;
     },
 
