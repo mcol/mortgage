@@ -42,6 +42,10 @@ test("Adding and removing rates", function() {
     m.years(10);
     deepEqual(m.periods(), [72, 48], "Number of periods");
 
+    m.rate(5, 0);
+    deepEqual(m.periods(), [120], "Number of periods");
+    deepEqual(m.rate(), [3.99], "Rates after removing a rate");
+
 });
 
 test("Fixed rate payments", function() {

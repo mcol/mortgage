@@ -74,7 +74,7 @@ Mortgage.prototype = {
 
     rate: function(value, year) {
         if (!arguments.length) return this._yearlyrate;
-        if (value <= 0) {
+        if (value <= 0 || year <= 0) {
             this._yearlyrate = this._yearlyrate.slice(0, 1);
             this._rate = this._rate.slice(0, 1);
             this._period = this._period.slice(0, 1);
