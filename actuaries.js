@@ -234,7 +234,7 @@ function plotRepayment(element, mortgage, currentperiod) {
 }
 
 function lineRepayment(element, mortgage, currentperiod) {
-    var widemar = 80, mar = 20;
+    var widemar = 85, mar = 20;
     var chart = d3.select(element);
 
     var width = parseInt(chart.style("width"));
@@ -288,6 +288,25 @@ function lineRepayment(element, mortgage, currentperiod) {
         .style("stroke-width", 3)
         .style("stroke-linecap", "round");
 
+    // horizontal dashed lines
+    svg.append("path")
+        .data([[{ "x": 0, "y": due.principal[currentperiod]},
+                { "x": currentperiod, "y": due.principal[currentperiod]}]])
+        .attr("d", line)
+        .attr("class", "horiz")
+        .style("stroke", "grey");
+
+    svg.append("path")
+        .data([[{ "x": 0, "y": actual.principal[currentperiod]},
+                { "x": currentperiod, "y": actual.principal[currentperiod]}]])
+        .attr("d", line)
+        .attr("class", "horiz")
+        .style("stroke", "limegreen");
+
+    svg.selectAll(".horiz")
+        .style("stroke-width", 1)
+        .style("stroke-dasharray", "1,6");
+
     var xAxis = d3.svg.axis()
         .scale(xyears)
         .orient("bottom")
@@ -310,13 +329,17 @@ function lineRepayment(element, mortgage, currentperiod) {
         .call(yAxis);
 
     // current point
-    var xc = currentperiod;
-    var yc = actual.principal[xc];
     svg.append("svg:circle")
-        .attr("cx", xScale(xc))
-        .attr("cy", yScale(yc))
-        .attr("r", 5)
-        .attr("fill", "red");
+        .attr("cx", xScale(currentperiod))
+        .attr("cy", yScale(due.principal[currentperiod]))
+        .attr("r", 4)
+        .attr("fill", "grey");
+
+    svg.append("svg:circle")
+        .attr("cx", xScale(currentperiod))
+        .attr("cy", yScale(actual.principal[currentperiod]))
+        .attr("r", 4)
+        .attr("fill", "limegreen");
 }
 
 window.Mortgage = Mortgage;
