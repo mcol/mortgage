@@ -93,6 +93,10 @@
     <div id="overpaymentslider" style="margin: 3px 0; width: 350px; float: right;"></div>
     <p><label for="overpayment">Overpayment (<span class="currency">&pound;</span>)</label>
     <input id="overpayment" type="text" class="input" value="0" size="2" maxLength="4" /></p>
+    <p><label for="lumpsum">Lump sump payment (<span class="currency">&pound;</span>)</label>
+    <input id="lumpsum" type="text" class="input" value="0" size="3" maxLength="5" />
+    <label for="lumpsumpd">after</label>
+    <input id="lumpsumyear" type="text" class="input" value="0" size="2" maxLength="3" /> years</p>
     <p><span id="actualperiods">0</span> payments as follows:</p>
     <div id="actualpayment"></div>
   </div>
@@ -247,6 +251,18 @@ $("#overpayment").change(function() {
                                $("#overpayment").trigger("change");
                              }
                 });
+  $("#inputs").trigger("change");
+}).change();
+
+$("#lumpsum, #lumpsumyear").change(function() {
+  var maxlumpsum = mortgage.amount() / 100 / 2; // at most half of original
+  var lumpsum = clamp(parseInt($("#lumpsum").val()), 0, maxlumpsum);
+  var lumpsumyear = clamp(parseInt($("#lumpsumyear").val()), 0, mortgage.years());
+
+  mortgage.lumpsum(lumpsum, lumpsumyear);
+
+  $("#lumpsum").val(lumpsum);
+  $("#lumpsumyear").val(lumpsumyear);
   $("#inputs").trigger("change");
 }).change();
 
