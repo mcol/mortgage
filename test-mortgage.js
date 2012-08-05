@@ -171,7 +171,7 @@ test("Edge cases for extra payments", function() {
 
 });
 
-test("Lump sum payments", function() {
+test("Single lump sum payment", function() {
 
     var m = new Mortgage();
     m.amount(80000)
@@ -187,7 +187,7 @@ test("Lump sum payments", function() {
     deepEqual(p.actual, [56759, 58842], "Actual payment");
     deepEqual(pp.actual.lastpayment, 8073, "Last actual payment");
     deepEqual(tp.actual, 9784067, "Total actual payment");
-    deepEqual(ls.actual, 2000000, "Actual lump sum payment");
+    deepEqual(ls.actual, [2000000], "Actual lump sum payment");
     deepEqual(m.actualperiods(), 134, "Actual periods");
 
     var pr = m.principal(m.actualperiods() - 1);
@@ -211,7 +211,7 @@ test("Lump sum payments", function() {
     deepEqual(p.actual, [156759, 138444], "Actual payment");
     deepEqual(pp.actual.lastpayment, 138444, "Last actual payment");
     deepEqual(tp.actual, 8692943, "Total actual payment");
-    deepEqual(ls.actual, 1608071, "Actual lump sum payment");
+    deepEqual(ls.actual, [1608071], "Actual lump sum payment");
     deepEqual(m.actualperiods(), 48, "Actual periods");
 
     var pr = m.principal(m.actualperiods());
@@ -219,5 +219,74 @@ test("Lump sum payments", function() {
     deepEqual(pr.actual, 8000000, "Actual principal at actual periods");
     deepEqual(pr.extra, 6408071, "Extra payments at actual periods");
     deepEqual(pr.left, 0, "Left to pay at actual periods");
+
+});
+
+test("Multiple lump sum payments", function() {
+
+    var m = new Mortgage();
+    m.amount(80000)
+     .years(15)
+     .rate(3.39)
+     .rate(3.99, 2)
+     .lumpsum([20000, 20000], [5, 8]);
+
+    var p = m.payment();
+    var pp = m.paymentplan();
+    var tp = m.totalpayment();
+    var ls = m.lumpsum();
+    deepEqual(p.actual, [56759, 58842], "Actual payment");
+    deepEqual(pp.actual.lastpayment, 52649, "Last actual payment");
+    deepEqual(tp.actual, 9651489, "Total actual payment");
+    deepEqual(ls.actual, [2000000, 2000000], "Actual lump sum payment");
+    deepEqual(m.actualperiods(), 97, "Actual periods");
+
+    var pr = m.principal(m.actualperiods() - 1);
+    deepEqual(pr.actual, 7947525, "Actual principal at actual periods - 1");
+    deepEqual(pr.extra, 4000000, "Extra payments at actual periods - 1");
+    deepEqual(pr.left, 52475, "Left to pay at actual periods - 1");
+
+    var pr = m.principal(m.actualperiods());
+    deepEqual(pr.extra, 4000000, "Extra payments at actual periods");
+
+    m.overpayment(50);
+
+    var p = m.payment();
+    var pp = m.paymentplan();
+    var tp = m.totalpayment();
+    var ls = m.lumpsum();
+    deepEqual(p.actual, [61759, 62822], "Actual payment");
+    deepEqual(pp.actual.lastpayment, 62822, "Last actual payment");
+    deepEqual(tp.actual, 9577250, "Total actual payment");
+    deepEqual(ls.actual, [2000000, 1571850], "Actual lump sum payment");
+    deepEqual(m.actualperiods(), 96, "Actual periods");
+
+    var pr = m.principal(m.actualperiods() - 1);
+    deepEqual(pr.actual, 6370745, "Actual principal at actual periods - 1");
+    deepEqual(pr.extra, 2475000, "Extra payments at actual periods - 1");
+    deepEqual(pr.left, 1629255, "Left to pay at actual periods - 1");
+
+    var pr = m.principal(m.actualperiods());
+    deepEqual(pr.extra, 4051850, "Extra payments at actual periods");
+
+    m.overpayment(350);
+
+    var p = m.payment();
+    var pp = m.paymentplan();
+    var tp = m.totalpayment();
+    var ls = m.lumpsum();
+    deepEqual(p.actual, [91759, 86703], "Actual payment");
+    deepEqual(pp.actual.lastpayment, 18430, "Last actual payment");
+    deepEqual(tp.actual, 9162717, "Total actual payment");
+    deepEqual(ls.actual, [2000000, 0], "Actual lump sum payment");
+    deepEqual(m.actualperiods(), 82, "Actual periods");
+
+    var pr = m.principal(m.actualperiods() - 1);
+    deepEqual(pr.actual, 7981631, "Actual principal at actual periods - 1");
+    deepEqual(pr.extra, 4835000, "Extra payments at actual periods - 1");
+    deepEqual(pr.left, 18369, "Left to pay at actual periods - 1");
+
+    var pr = m.principal(m.actualperiods());
+    deepEqual(pr.extra, 4835000, "Extra payments at actual periods");
 
 });

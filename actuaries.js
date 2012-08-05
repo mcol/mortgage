@@ -28,6 +28,8 @@ function remprinc(payment, rate, period, presentValue) {
 
 ////////////////////////////////
 
+Array.prototype.isArray = true;
+
 Number.prototype.toCurrency = function() {
     if (!isFinite(this)) return this;
     var self = this.toMoney();
@@ -52,7 +54,7 @@ var Mortgage = function() {
     this._due = { principal: [], payment: [] };
     this._actual = { principal: [], payment: [] };
     this._overpayment = 0;
-    this._lumpsum = { available: 0, actual: 0, period: 0 };
+    this._lumpsum = { available: [], actual: [], period: [] };
 };
 
 Mortgage.prototype = {
@@ -104,14 +106,19 @@ Mortgage.prototype = {
         return this;
     },
 
-    lumpsum: function(value, year) {
+    lumpsum: function(values, years) {
         if (!arguments.length) return this._lumpsum;
-        if (value <= 0 || year <= 0) {
-            this._lumpsum.available = 0;
+        if (values.isArray === undefined) {
+            this._lumpsum.available[0] = values * 100;
+            this._lumpsum.period[0] = years * 12;
+            this._lumpsum.actual[0] = 0;
             return this;
         }
-        this._lumpsum.available = value * 100;
-        this._lumpsum.period = year * 12;
+        for (var i = 0, l = values.length; i < l; i++) {
+            this._lumpsum.available[i] = values[i] * 100;
+            this._lumpsum.period[i] = years[i] * 12;
+            this._lumpsum.actual[i] = 0;
+        }
         return this;
     },
 
@@ -121,15 +128,19 @@ Mortgage.prototype = {
 
     _repaymentplan: function(obj, payment, lumpsumpd) {
         var pv = this._amount, prin = [0], totalpayment = 0;
+        var lsidx = 0, lspd = lumpsumpd[lsidx] || -1;
+        for (var i = 0; i < this._lumpsum.actual.length; i++)
+            this._lumpsum.actual[i] = 0;
         for (var i = 1, pd = 0; pv > payment[pd]; i++) {
             pd = +(i > this._period[0]);
             prin[i] = prin[i - 1] + cumprinc(payment[pd], this._rate[pd], 1, pv);
             totalpayment += payment[pd];
-            if (i == lumpsumpd) {
-                this._lumpsum.actual = Math.min(this._lumpsum.available,
-                                                this._amount - prin[i]);
-                prin[i] += this._lumpsum.actual;
-                totalpayment += this._lumpsum.actual;
+            if (i == lspd) {
+                this._lumpsum.actual[lsidx] = Math.min(this._lumpsum.available[lsidx],
+                                                       this._amount - prin[i]);
+                prin[i] += this._lumpsum.actual[lsidx];
+                totalpayment += this._lumpsum.actual[lsidx];
+                lspd = lumpsumpd[++lsidx] || -1;
             }
             pv = this._amount - prin[i];
         }
@@ -154,7 +165,7 @@ Mortgage.prototype = {
             if (fv > 0)
                 actual[1] = pmt(this._rate[1], pd[1], fv) + this._overpayment;
         }
-        this._repaymentplan(this._due, due, -1);
+        this._repaymentplan(this._due, due, []);
         this._repaymentplan(this._actual, actual, this._lumpsum.period);
         this._due.lastextra = 0;
         return {
@@ -173,18 +184,18 @@ Mortgage.prototype = {
     principal: function(currentperiod) {
         var paid = this._actual.principal[currentperiod];
         var extra = this._overpayment * currentperiod;
-        if (currentperiod >= this._lumpsum.period)
-            extra += this._lumpsum.actual;
+        var lsidx = 0, lsextra = 0;
+        while (currentperiod >= (this._lumpsum.period[lsidx] || Infinity))
+            lsextra += this._lumpsum.actual[lsidx++];
         var lastpd = this.actualperiods() - 1;
         if (currentperiod > lastpd) {
             paid = this._amount;
-            extra = this._overpayment * lastpd + this._actual.lastextra +
-                this._lumpsum.actual;
+            extra = this._overpayment * lastpd + this._actual.lastextra;
         }
 	return {
 	    due: this._due.principal[currentperiod],
 	    actual: paid,
-	    extra: extra,
+	    extra: extra + lsextra,
 	    left: this._amount - paid
 	};
     },
