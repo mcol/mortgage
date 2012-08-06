@@ -289,4 +289,24 @@ test("Multiple lump sum payments", function() {
     var pr = m.principal(m.actualperiods());
     deepEqual(pr.extra, 4835000, "Extra payments at actual periods");
 
+    m.lumpsum([30000, 30000, 30000], [2, 3, 4]);
+
+    var p = m.payment();
+    var pp = m.paymentplan();
+    var tp = m.totalpayment();
+    var ls = m.lumpsum();
+    deepEqual(p.actual, [91759, 62024], "Actual payment");
+    deepEqual(pp.actual.lastpayment, 62024, "Last actual payment");
+    deepEqual(tp.actual, 8607083, "Total actual payment");
+    deepEqual(ls.actual, [3000000, 2660579, 0], "Actual lump sum payment");
+    deepEqual(m.actualperiods(), 36, "Actual periods");
+
+    var pr = m.principal(m.actualperiods() - 1);
+    deepEqual(pr.actual, 5286420, "Actual principal at actual periods - 1");
+    deepEqual(pr.extra, 4225000, "Extra payments at actual periods - 1");
+    deepEqual(pr.left, 2713580, "Left to pay at actual periods - 1");
+
+    var pr = m.principal(m.actualperiods());
+    deepEqual(pr.extra, 6920579, "Extra payments at actual periods");
+
 });
