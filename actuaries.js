@@ -343,7 +343,7 @@ function lineRepayment(element, mortgage, currentperiod) {
     var xAxis = d3.svg.axis()
         .scale(xyears)
         .orient("bottom")
-        .ticks(5);
+        .ticks(10);
 
     svg.append("g")
         .attr("class", "axis")
