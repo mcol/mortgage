@@ -10,7 +10,7 @@ test("Basic methods", function() {
 
     deepEqual(m.periods(), [24, 156], "Number of periods");
     deepEqual(m.rate(), [3.39, 3.99], "Rates");
-    deepEqual(m.actualperiods(), 180, "Actual periods");
+    deepEqual(m.actualperiods(), 180, "Actual periods before payments");
  
     m.rate(8, 3);
     deepEqual(m.periods(), [36, 144], "Number of periods");

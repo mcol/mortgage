@@ -57,6 +57,8 @@ var Mortgage = function() {
     this._lumpsum = { available: [], actual: [], period: [] };
 };
 
+    var calls = 0;
+
 Mortgage.prototype = {
 
     amount: function(value) {
@@ -143,6 +145,7 @@ Mortgage.prototype = {
                 lspd = lumpsumpd[++lsidx] || -1;
             }
             pv = this._amount - prin[i];
+//            console.log("%d  %s  %s  %s", i, payment[pd].toMoney(), prin[i].toMoney(), pv.toMoney());
         }
         if (pv > 0)
             prin[i] = this._amount;
@@ -152,9 +155,11 @@ Mortgage.prototype = {
         obj.totalpayment = totalpayment + (pv > 0 ? obj.lastpayment : 0);
         var baseactualpayment = payment[pd] - this._overpayment;
         obj.lastextra = Math.max(obj.lastpayment - baseactualpayment, 0);
+//        console.log("%d  %s  %s  %s", i, payment[pd].toMoney(), prin[i].toMoney(), pv.toMoney());
     },
 
     payment: function() {
+        console.log("payment() call " + ++calls);
         var due = [], actual = [], pd = this._period, fv;
         due[0] = pmt(this._rate[0], this._periods, this._amount);
         actual[0] = due[0] + this._overpayment;
@@ -216,13 +221,24 @@ Mortgage.prototype = {
 
 };
 
+var prcalled = 0;
 function plotRepayment(element, mortgage, currentperiod) {
+    console.log("plotRepayment() " + ++prcalled);
     var principal = mortgage.principal(currentperiod);
-    var data = [{width: mortgage.amount(), colour: "lightgrey"},
-                {width: principal.actual, colour: "gold"},
-                {width: principal.due, colour: "limegreen"}];
+    var data = [{width: principal.actual - principal.extra, colour: "limegreen"},
+                {width: principal.extra, colour: "gold"},
+         //       {width: principal.saved, colour: "orange"},
+                {width: principal.left, colour: "lightgrey"}];
 
     var chart = d3.select(element);
+
+    function getLeft(data) {
+       var left = [0]
+       for (var i = 1, l = data.length; i < l; i++)
+          left[i] = left[i - 1] + data[i - 1].width
+       return left;
+    }
+    var left = getLeft(data);
 
     var mar = 20;
     var width = parseInt(chart.style("width"));
@@ -239,7 +255,7 @@ function plotRepayment(element, mortgage, currentperiod) {
 
     svg.selectAll(".barchart").data(data).enter()
         .append("rect")
-        .attr("x", xScale(0))
+        .attr("x", function(d, i) { return xScale(left[i]); })
         .attr("y", mar)
         .attr("width", function(d) { return xScale(d.width) - mar; })
         .attr("height", height - 2 * mar - 0.5)
@@ -384,3 +400,18 @@ window.plotRepayment = plotRepayment;
 window.lineRepayment = lineRepayment;
 
 })();
+
+/*
+ try {
+     throw new Error("dummy");
+ } catch(e) {
+     console.log(e.stack);
+ }
+
+Array.prototype.toMoney = function() {
+    var newarr = [];
+    for (var i = 0, l = this.length; i < l; i++)
+        newarr[i] = this[i].toMoney();
+    return newarr;
+}
+*/

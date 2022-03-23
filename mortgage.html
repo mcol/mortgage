@@ -1,9 +1,10 @@
+<!DOCTYPE html> <!-- breaks toggle -->
 <html>
   <head>
     <title>Mortgage computations</title>
-    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-1.7.2.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.8.21.custom.min.js"></script>
-    <script type="text/javascript" src="d3.v2.min.js"></script>
+    <script type="text/javascript" src="js/d3.v2.min.js"></script>
     <script type="text/javascript" src="actuaries.js"></script>
     <link type="text/css" href="css/ui-lightness/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -93,10 +94,14 @@
     <div id="overpaymentslider" style="margin: 3px 0; width: 350px; float: right;"></div>
     <p><label for="overpayment">Overpayment (<span class="currency">&pound;</span>)</label>
     <input id="overpayment" type="text" class="input" value="0" size="2" maxLength="4" /></p>
-    <p><label for="lumpsum">Lump sump payment (<span class="currency">&pound;</span>)</label>
+    <p><label for="lumpsum">Lump sum payment (<span class="currency">&pound;</span>)</label>
     <input id="lumpsum" type="text" class="input" value="0" size="3" maxLength="5" />
     <label for="lumpsumpd">after</label>
     <input id="lumpsumyear" type="text" class="input" value="0" size="2" maxLength="3" /> years</p>
+    <p><label for="lumpsum1">Lump sum payment (<span class="currency">&pound;</span>)</label>
+    <input id="lumpsum1" type="text" class="input" value="0" size="3" maxLength="5" />
+    <label for="lumpsumpd1">after</label>
+    <input id="lumpsumyear1" type="text" class="input" value="0" size="2" maxLength="3" /> years</p>
     <p><span id="actualperiods">0</span> payments as follows:</p>
     <div id="actualpayment"></div>
   </div>
@@ -211,7 +216,6 @@ $("#inputs").change(function() {
 
 // repayments
 $("#repaymentoutputs").change(function() {
-
   currentperiod = clamp(parseInt($("#currentperiod").text()), 0, actualperiods);
   $("#currentperiod").text(currentperiod);
   $("#actualperiods").text(actualperiods);
@@ -254,15 +258,20 @@ $("#overpayment").change(function() {
   $("#inputs").trigger("change");
 }).change();
 
-$("#lumpsum, #lumpsumyear").change(function() {
+$("#lumpsum, #lumpsumyear, #lumpsum1, #lumpsumyear1").change(function() {
   var maxlumpsum = mortgage.amount() / 100 / 2; // at most half of original
-  var lumpsum = clamp(parseInt($("#lumpsum").val()), 0, maxlumpsum);
-  var lumpsumyear = clamp(parseInt($("#lumpsumyear").val()), 0, mortgage.years());
+  var lumpsum = [], lumpsumyear = [];
+  lumpsum[0] = clamp(parseInt($("#lumpsum").val()), 0, maxlumpsum);
+  lumpsumyear[0] = clamp(parseInt($("#lumpsumyear").val()), 0, mortgage.years());
+  lumpsum[1] = clamp(parseInt($("#lumpsum1").val()), 0, maxlumpsum);
+  lumpsumyear[1] = clamp(parseInt($("#lumpsumyear1").val()), lumpsumyear[0], mortgage.years());
 
   mortgage.lumpsum(lumpsum, lumpsumyear);
 
-  $("#lumpsum").val(lumpsum);
-  $("#lumpsumyear").val(lumpsumyear);
+  $("#lumpsum").val(lumpsum[0]);
+  $("#lumpsumyear").val(lumpsumyear[0]);
+  $("#lumpsum1").val(lumpsum[1]);
+  $("#lumpsumyear1").val(lumpsumyear[1]);
   $("#inputs").trigger("change");
 }).change();
 
